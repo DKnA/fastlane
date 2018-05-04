@@ -111,7 +111,7 @@ module Fastlane
       def self.mailgunit(options)
         sandbox_domain = options[:postmaster].split("@").last
         params = {
-          from: "#{options[:from]}<#{options[:postmaster]}>",
+          from: (options[:from]).to_s,
           to: (options[:to]).to_s,
           subject: options[:subject],
           html: mail_template(options)
@@ -126,7 +126,13 @@ module Fastlane
           params.store(:attachment, attachments)
         end
 
-        RestClient.post("https://api:#{options[:apikey]}@api.mailgun.net/v3/#{sandbox_domain}/messages", params)
+        begin
+          resp = RestClient.post("https://api:#{options[:apikey]}@api.mailgun.net/v3/#{sandbox_domain}/messages", params)
+          UI.verbose("mailgun response: #{resp.body}")
+        rescue RestClient::Exception => e
+          UI.verbose("mailgun response: #{e.response}")
+          raise e
+        end
         mail_template(options)
       end
 
